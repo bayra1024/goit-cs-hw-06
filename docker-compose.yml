@@ -23,3 +23,5 @@ services:
       - ./.env
 volumes:
   mongodb_data:
+
+
