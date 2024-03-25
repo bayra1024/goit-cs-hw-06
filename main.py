@@ -2,17 +2,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 from pathlib import Path
 import signal
-import urllib.parse
 import socket
-import threading
 import logging
-from datetime import datetime
 from dotenv import load_dotenv
-
-
 from socket_srv import socket_server
+from multiprocessing import Process
 
-WEB_DIR = "./front-init"
+
+WEB_DIR = "./front"
 
 server_running = True
 
@@ -64,7 +61,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect(("localhost", PORT2))
                 sock.sendall(data)
-                # sock.sendall(b"Hello, world")
 
             self.send_response(200)
             self.end_headers()
@@ -79,7 +75,7 @@ def run_server(port):
         print(f"Starting server on port {port}...")
         httpd.serve_forever()
     except KeyboardInterrupt:
-        logging.error("Server stoping...")
+        logging.error("Server stopping...")
         httpd.shutdown()
 
 
@@ -96,10 +92,10 @@ if __name__ == "__main__":
     ENV_PATH = Path(__file__).parent / ".env"
     load_dotenv(ENV_PATH)
 
-    PORT = int(os.getenv("PORT"))
-    PORT2 = int(os.getenv("PORT2"))
-    web_thread = threading.Thread(target=run_server, args=(PORT,))
-    web_thread.daemon = True  # Позначаємо потік як демон, щоб він завершився при завершенні основного потоку
-    web_thread.start()
+    PORT = int(os.getenv("HTTP_SERVER_PORT"))
+    PORT2 = int(os.getenv("SOCKET_SERVER_PORT"))
+    web_process = Process(target=run_server, args=(PORT,))
+    web_process.daemon = True
+    web_process.start()
 
     socket_server(PORT2)
